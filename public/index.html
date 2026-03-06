@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>KunlikIsh</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root {
+  --bg:#0e0e0e; --card:#181818; --card2:#202020;
+  --border:#2c2c2c; --accent:#3b82f6; --green:#22c55e;
+  --red:#ef4444; --yellow:#f59e0b; --text:#f0f0f0; --muted:#777;
+  --r:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* NAV */
+.nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;z-index:50;padding-bottom:env(safe-area-inset-bottom)}
+.nb{flex:1;padding:8px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;color:var(--muted);cursor:pointer;border:none;background:none;transition:color .2s;position:relative}
+.nb.on{color:var(--accent)}
+.nb svg{width:22px;height:22px}
+.nb .dot{position:absolute;top:6px;right:calc(50% - 14px);width:8px;height:8px;background:var(--red);border-radius:50%;display:none}
+.nb .dot.show{display:block}
+
+/* PAGES */
+.pg{display:none;padding:12px 12px 76px;max-width:480px;margin:0 auto}
+.pg.on{display:block}
+
+/* TOP BAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.topbar-title{font-size:19px;font-weight:700}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.c-title{font-size:15px;font-weight:600;margin-bottom:3px}
+.c-sub{font-size:12px;color:var(--muted)}
+.row{display:flex;justify-content:space-between;align-items:center}
+
+/* TAGS */
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;margin:2px 2px 0 0}
+.tag-blue{background:#1e3a5f;color:#93c5fd}
+.tag-green{background:#14532d;color:#86efac}
+.tag-yellow{background:#451a03;color:#fcd34d}
+.tag-red{background:#450a0a;color:#fca5a5}
+
+/* BUTTONS */
+.btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 16px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:opacity .15s;width:100%}
+.btn:active{opacity:.75}
+.btn-p{background:var(--accent);color:#fff}
+.btn-tg{background:#1a3a54;border:1px solid #2481cc;color:#7cc5f5}
+.btn-ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.btn-sm{padding:7px 14px;font-size:13px;width:auto}
+.btn-red{background:var(--red);color:#fff}
+.brow{display:flex;gap:8px;margin-top:10px}
+
+/* INPUT */
+input,textarea,select{width:100%;background:var(--card2);border:1px solid var(--border);color:var(--text);padding:11px 12px;border-radius:10px;font-size:14px;outline:none;font-family:inherit;margin-bottom:10px}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+textarea{resize:none;min-height:75px}
+label{font-size:12px;color:var(--muted);margin-bottom:4px;display:block}
+
+/* CHIPS */
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.chip{padding:6px 12px;border-radius:20px;font-size:12px;cursor:pointer;border:1px solid var(--border);background:var(--card2);color:var(--muted);transition:all .15s;user-select:none}
+.chip.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* SEARCH */
+.srch{position:relative;margin-bottom:12px}
+.srch input{padding-left:36px;margin-bottom:0}
+.srch-ic{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+
+/* AVATAR */
+.av{width:42px;height:42px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;color:#fff;flex-shrink:0}
+.av-lg{width:62px;height:62px;font-size:24px}
+
+/* MODAL */
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:flex-end;justify-content:center}
+.mo.on{display:flex}
+.mo-box{background:var(--card);border-radius:20px 20px 0 0;padding:18px 14px;width:100%;max-width:480px;max-height:88vh;overflow-y:auto;padding-bottom:calc(18px + env(safe-area-inset-bottom))}
+.mo-title{font-size:17px;font-weight:700;margin-bottom:14px}
+.mo-x{float:right;background:none;border:none;color:var(--muted);font-size:24px;cursor:pointer;margin:-4px 0 0 0;line-height:1}
+
+/* EMPTY */
+.empty{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-ic{font-size:46px;margin-bottom:10px}
+
+/* ONBOARD */
+#ob{position:fixed;inset:0;background:var(--bg);z-index:300;overflow-y:auto;padding:20px 14px 40px;max-width:480px;margin:0 auto}
+.step{display:none}
+.step.on{display:block}
+.st-title{font-size:21px;font-weight:700;margin-bottom:5px}
+.st-sub{color:var(--muted);font-size:14px;margin-bottom:22px}
+.type-card{border:2px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:10px;cursor:pointer;transition:border-color .2s}
+.type-card.on{border-color:var(--accent);background:#0d1d2e}
+.tc-icon{font-size:30px;margin-bottom:6px}
+.tc-name{font-size:16px;font-weight:600}
+.tc-desc{font-size:12px;color:var(--muted);margin-top:3px}
+
+/* TOAST */
+.toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:9px 18px;border-radius:20px;font-size:13px;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;max-width:90vw;text-align:center}
+.toast.on{opacity:1}
+
+/* SPINNER */
+.spin{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:sp .65s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.lc{display:flex;justify-content:center;padding:36px}
+
+/* URGENT BADGE */
+.urg{background:var(--red);color:#fff;font-size:10px;padding:2px 7px;border-radius:20px;font-weight:700}
+
+/* SECTION */
+.sec{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:14px 0 8px}
+
+/* STATS ROW */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px 8px;text-align:center}
+.stat-n{font-size:20px;font-weight:700;color:var(--accent)}
+.stat-l{font-size:10px;color:var(--muted);margin-top:2px}
+
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- ONBOARDING -->
+<div id="ob">
+  <!-- Tur tanlash -->
+  <div class="step on" id="s-type">
+    <div style="font-size:36px;margin-bottom:12px">👷</div>
+    <div class="st-title">KunlikIsh</div>
+    <div class="st-sub" style="margin-bottom:28px">Kunlik va qisqa muddatli ishlar platformasi</div>
+    <div class="type-card" id="tc-w" onclick="pickType('worker')">
+      <div class="tc-icon">🪚</div>
+      <div class="tc-name">Men ishchi</div>
+      <div class="tc-desc">Kunlik ish qidiraman</div>
+    </div>
+    <div class="type-card" id="tc-e" onclick="pickType('employer')">
+      <div class="tc-icon">🏗️</div>
+      <div class="tc-name">Men ish beruvchi</div>
+      <div class="tc-desc">Ishchi topmoqchiman</div>
+    </div>
+  </div>
+
+  <!-- Ma'lumot -->
+  <div class="step" id="s-info">
+    <button onclick="goStep('s-type')" style="background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;margin-bottom:12px">←</button>
+    <div class="st-title" id="si-title">Ma'lumotlar</div>
+    <div class="st-sub">Qisqa va aniq to'ldiring</div>
+
+    <label>Ism familiya</label>
+    <input id="r-name" placeholder="Ahmadjon Toshmatov" maxlength="80"/>
+
+    <!-- Worker fields -->
+    <div id="wf">
+      <label>Kasb / mutaxassislik</label>
+      <div class="chips" id="cat-chips"></div>
+      <label>Ish turi</label>
+      <div class="chips" id="wt-chips"></div>
+      <label>Telefon raqam</label>
+      <input id="r-phone" placeholder="+998901234567" type="tel" maxlength="13"/>
+    </div>
+
+    <!-- Employer fields -->
+    <div id="ef" style="display:none">
+      <label>Telefon raqam</label>
+      <input id="r-phone-e" placeholder="+998901234567" type="tel" maxlength="13"/>
+    </div>
+
+    <button class="btn btn-p" id="reg-btn" onclick="doRegister()">
+      <span id="rb-t">Davom etish</span>
+      <span id="rb-s" style="display:none"><div class="spin"></div></span>
+    </button>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none">
+
+  <!-- E'LONLAR -->
+  <div class="pg on" id="pg-jobs">
+    <div class="topbar">
+      <div class="topbar-title">E'lonlar 💼</div>
+      <span id="j-cnt" style="font-size:12px;color:var(--muted)"></span>
+    </div>
+    <div class="srch">
+      <span class="srch-ic"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>
+      <input id="j-q" placeholder="Qidirish..." oninput="renderJobs()"/>
+    </div>
+    <div class="chips" id="j-cats"></div>
+    <div class="chips" id="j-wts"></div>
+    <div id="j-list"><div class="lc"><div class="spin"></div></div></div>
+  </div>
+
+  <!-- MENING -->
+  <div class="pg" id="pg-my">
+    <div class="topbar">
+      <div class="topbar-title" id="my-title">Mening</div>
+    </div>
+    <div id="my-body"></div>
+  </div>
+
+  <!-- BILDIRISHNOMALAR -->
+  <div class="pg" id="pg-notif">
+    <div class="topbar">
+      <div class="topbar-title">Bildirishnomalar 🔔</div>
+    </div>
+    <div id="notif-list"><div class="lc"><div class="spin"></div></div></div>
+  </div>
+
+  <!-- PROFIL -->
+  <div class="pg" id="pg-profile">
+    <div id="profile-body"></div>
+  </div>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <button class="nb on" onclick="showPg('jobs',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+      E'lonlar
+    </button>
+    <button class="nb" onclick="showPg('my',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+      <span id="nav-my">Mening</span>
+    </button>
+    <button class="nb" onclick="showPg('notif',this)" id="nb-notif">
+      <div class="dot" id="notif-dot"></div>
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      Bildirishnoma
+    </button>
+    <button class="nb" onclick="showPg('profile',this)">
+      <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Profil
+    </button>
+  </nav>
+</div>
+
+<!-- JOB MODAL -->
+<div class="mo" id="mo-job">
+  <div class="mo-box">
+    <button class="mo-x" onclick="closeMo('mo-job')">×</button>
+    <div id="mo-job-body"></div>
+  </div>
+</div>
+
+<!-- E'LON JOYLASH MODAL -->
+<div class="mo" id="mo-post">
+  <div class="mo-box">
+    <button class="mo-x" onclick="closeMo('mo-post')">×</button>
+    <div class="mo-title">Yangi e'lon</div>
+    <label>Sarlavha *</label>
+    <input id="pj-t" placeholder="Usta kerak, g'isht terish" maxlength="150"/>
+    <label>Kasb</label>
+    <div class="chips" id="pj-cats"></div>
+    <label>Ish turi</label>
+    <div class="chips" id="pj-wts"></div>
+    <label>Maosh</label>
+    <div style="display:flex;gap:8px">
+      <input id="pj-sal" type="number" placeholder="150000" style="flex:1;margin-bottom:10px"/>
+      <select id="pj-unit" style="width:100px;margin-bottom:10px">
+        <option value="kun">so'm/kun</option>
+        <option value="soat">so'm/soat</option>
+        <option value="ish">so'm/ish</option>
+      </select>
+    </div>
+    <label>Joylashuv *</label>
+    <input id="pj-loc" placeholder="Toshkent, Yunusobod" maxlength="150"/>
+    <label>Tavsif</label>
+    <textarea id="pj-desc" placeholder="Qo'shimcha ma'lumot..." maxlength="1000"></textarea>
+    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-bottom:14px">
+      <input type="checkbox" id="pj-urg" style="width:auto;margin:0"/> 🔥 Shoshilinch
+    </label>
+    <button class="btn btn-p" onclick="postJob()">E'lon joylash</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CATS = ['Qurilish','Yuk tashish','Tozalash','Bog\'dorchilik','Uy-ro\'zg\'or','Elektrik','Santexnik','Bo\'yoqchi','Haydovchi','Oshpaz','Yordamchi','Boshqa'];
+const WTS  = ['Kunlik','Soatlik','Bir martalik','Doimiy'];
+
+const $ = id => document.getElementById(id);
+
+// ─── STATE ───
+const S = {
+  user: null, token: null,
+  jobs: [], jobCat: null, jobWt: null,
+  regType: null, regCat: '', regWts: [],
+  pjCat: '', pjWt: '',
+};
+
+// ─── INIT ───
+addEventListener('DOMContentLoaded', async () => {
+  if (window.Telegram?.WebApp) { Telegram.WebApp.ready(); Telegram.WebApp.expand(); }
+
+  buildChips('cat-chips', CATS, v => { S.regCat = v; }, true);
+  buildChips('wt-chips',  WTS,  v => S.regWts = toggleArr(S.regWts, v), false);
+  buildChips('j-cats',    CATS, v => { S.jobCat = S.jobCat===v?null:v; renderJobs(); }, true);
+  buildChips('j-wts',     WTS,  v => { S.jobWt  = S.jobWt===v?null:v;  renderJobs(); }, true);
+  buildChips('pj-cats',   CATS, v => { S.pjCat = S.pjCat===v?'':v; },  true);
+  buildChips('pj-wts',    WTS,  v => { S.pjWt  = S.pjWt===v?'':v; },   true);
+
+  const t = localStorage.getItem('ki_token');
+  const u = localStorage.getItem('ki_user');
+  if (t && u) { S.token = t; S.user = JSON.parse(u); showApp(); return; }
+
+  await tryLogin();
+});
+
+async function tryLogin() {
+  const tg = window.Telegram?.WebApp;
+  const initData = tg?.initData || '';
+  const tgUser   = tg?.initDataUnsafe?.user;
+  if (!initData && !tgUser) return;
+
+  const r = await req('/api/auth?action=login', 'POST', { initData, tgUser });
+  if (!r) return;
+  if (r.action === 'login') { saveAuth(r); showApp(); }
+  else { S.tgData = r; goStep('s-type'); }
+}
+
+function pickType(t) {
+  S.regType = t;
+  [$('tc-w'),$('tc-e')].forEach(el => el.classList.remove('on'));
+  $(t==='worker'?'tc-w':'tc-e').classList.add('on');
+  $('wf').style.display = t==='worker' ? 'block':'none';
+  $('ef').style.display = t==='employer' ? 'block':'none';
+  $('si-title').textContent = t==='worker' ? 'Ishchi profili' : 'Ish beruvchi';
+  goStep('s-info');
+}
+
+async function doRegister() {
+  if (!S.regType) return toast('Tur tanlang');
+  const name = $('r-name').value.trim();
+  if (!name) return toast('Ism kiriting');
+  const phone = S.regType==='worker' ? $('r-phone').value.trim() : $('r-phone-e').value.trim();
+
+  $('rb-t').style.display = 'none'; $('rb-s').style.display = 'block';
+
+  const r = await req('/api/auth?action=register', 'POST', {
+    tgId:       S.tgData?.tgId,
+    tgUsername: S.tgData?.tgUsername,
+    name, type: S.regType,
+    category:  S.regCat,
+    workTypes: S.regWts,
+    phone,
+  });
+
+  $('rb-t').style.display = 'block'; $('rb-s').style.display = 'none';
+  if (!r) return;
+  saveAuth(r); showApp();
+}
+
+function saveAuth(r) {
+  S.user = r.user; S.token = r.token;
+  localStorage.setItem('ki_token', r.token);
+  localStorage.setItem('ki_user',  JSON.stringify(r.user));
+}
+
+function showApp() {
+  $('ob').style.display  = 'none';
+  $('app').style.display = 'block';
+  $('nav-my').textContent = S.user?.type==='employer' ? "E'lonlarim" : 'Arizalarim';
+  loadJobs();
+  loadNotifs();
+}
+
+// ─── PAGES ───
+function showPg(name, btn) {
+  document.querySelectorAll('.pg').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.nb').forEach(b => b.classList.remove('on'));
+  $('pg-'+name).classList.add('on');
+  btn.classList.add('on');
+  if (name==='my')      loadMyPage();
+  if (name==='notif')   { loadNotifs(); markNotifsRead(); }
+  if (name==='profile') renderProfile();
+}
+
+// ─── JOBS ───
+async function loadJobs() {
+  const data = await req('/api/jobs');
+  if (!data) return;
+  S.jobs = data;
+  renderJobs();
+}
+
+function renderJobs() {
+  const q   = $('j-q').value.toLowerCase();
+  let list  = S.jobs;
+  if (S.jobCat) list = list.filter(j => j.category===S.jobCat);
+  if (S.jobWt)  list = list.filter(j => j.workType===S.jobWt);
+  if (q)        list = list.filter(j =>
+    j.title.toLowerCase().includes(q) ||
+    j.location.toLowerCase().includes(q) ||
+    j.category.toLowerCase().includes(q)
+  );
+
+  $('j-cnt').textContent = list.length + ' ta';
+
+  if (!list.length) {
+    $('j-list').innerHTML = `<div class="empty"><div class="empty-ic">🔍</div>Hech narsa topilmadi</div>`;
+    return;
+  }
+  $('j-list').innerHTML = list.map(j => `
+    <div class="card" onclick="openJob('${j.id}')">
+      <div class="row" style="margin-bottom:6px">
+        <div>
+          <div class="c-title">${esc(j.title)}</div>
+          <div class="c-sub">${esc(j.employerName)} · ${esc(j.location)}</div>
+        </div>
+        ${j.urgent ? '<span class="urg">🔥 Shoshilinch</span>' : ''}
+      </div>
+      <div>
+        ${j.salary ? `<span class="tag tag-green">💰 ${fmt(j.salary)} so'm/${esc(j.salaryUnit)}</span>` : ''}
+        ${j.workType   ? `<span class="tag tag-blue">${esc(j.workType)}</span>`   : ''}
+        ${j.category   ? `<span class="tag tag-blue">${esc(j.category)}</span>`   : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function openJob(id) {
+  const j = S.jobs.find(x => x.id===id);
+  if (!j) return;
+  const isW = S.user?.type==='worker';
+  $('mo-job-body').innerHTML = `
+    <div class="mo-title">${esc(j.title)}</div>
+    <div style="color:var(--muted);font-size:13px;margin-bottom:12px">
+      ${esc(j.employerName)} · 📍 ${esc(j.location)}
+    </div>
+    <div style="margin-bottom:12px">
+      ${j.salary   ? `<span class="tag tag-green">💰 ${fmt(j.salary)} so'm/${esc(j.salaryUnit)}</span>` : ''}
+      ${j.workType ? `<span class="tag tag-blue">${esc(j.workType)}</span>` : ''}
+      ${j.category ? `<span class="tag tag-blue">${esc(j.category)}</span>` : ''}
+      ${j.urgent   ? '<span class="urg" style="margin-left:4px">🔥 Shoshilinch</span>' : ''}
+    </div>
+    ${j.description ? `<div style="font-size:14px;line-height:1.65;color:#ccc;margin-bottom:16px">${esc(j.description)}</div>` : ''}
+    ${isW ? `
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${j.tgUsername ? `
+          <button class="btn btn-tg" onclick="openTg('${j.tgUsername}')">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#7cc5f5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8-1.7 8.02c-.12.56-.46.7-.93.44l-2.57-1.89-1.24 1.19c-.14.14-.25.25-.51.25l.18-2.6 4.7-4.24c.2-.18-.04-.28-.31-.1L7.97 14.6l-2.54-.79c-.55-.17-.56-.55.12-.81l9.91-3.82c.46-.17.87.11.71.81l-.53.01z"/></svg>
+            Telegram orqali bog'lanish
+          </button>
+        ` : `<div style="font-size:12px;color:var(--muted);text-align:center;padding:10px;background:var(--card2);border-radius:8px">Ish beruvchi Telegram username ulamamagan</div>`}
+      </div>
+    ` : ''}
+  `;
+  openMo('mo-job');
+}
+
+// ─── TELEGRAM ───
+function openTg(username) {
+  const link = `https://t.me/${username}`;
+  if (window.Telegram?.WebApp?.openTelegramLink) {
+    try { Telegram.WebApp.openTelegramLink(link); return; } catch {}
+  }
+  window.open(link, '_blank');
+}
+
+// ─── MY PAGE ───
+async function loadMyPage() {
+  if (S.user?.type==='employer') renderMyEmployer();
+  else renderMyWorker();
+}
+
+async function renderMyEmployer() {
+  $('my-title').textContent = "E'lonlarim";
+  $('my-body').innerHTML = `<div class="lc"><div class="spin"></div></div>`;
+  const jobs = await req('/api/jobs?my=1');
+  if (!jobs) return;
+  $('my-body').innerHTML = `
+    <button class="btn btn-p" style="margin-bottom:14px" onclick="openMo('mo-post')">+ Yangi e'lon</button>
+    <div class="sec">Aktiv e'lonlar (${jobs.filter(j=>j.status==='active').length})</div>
+    ${jobs.length ? jobs.map(j => `
+      <div class="card">
+        <div class="row">
+          <div>
+            <div class="c-title">${esc(j.title)}</div>
+            <div class="c-sub">📍 ${esc(j.location)} · ${j.salary?fmt(j.salary)+' so\'m/'+j.salaryUnit:''}</div>
+          </div>
+          <span class="tag ${j.status==='active'?'tag-green':''}">
+            ${j.status==='active'?'Aktiv':'Yopiq'}
+          </span>
+        </div>
+        ${j.status==='active' ? `
+          <div class="brow">
+            <button class="btn btn-red btn-sm" onclick="deleteJob('${j.id}')">Yopish</button>
+          </div>
+        ` : ''}
+      </div>
+    `).join('') : '<div class="empty"><div class="empty-ic">📋</div>Hali e\'lon yo\'q</div>'}
+  `;
+}
+
+function renderMyWorker() {
+  $('my-title').textContent = 'Mening';
+  const u = S.user;
+  $('my-body').innerHTML = `
+    <div class="card" style="text-align:center;padding:20px">
+      <div class="av av-lg" style="margin:0 auto 12px">${u.name?.[0]||'?'}</div>
+      <div style="font-size:17px;font-weight:700">${esc(u.name)}</div>
+      <div style="font-size:13px;color:var(--muted);margin-top:4px">${esc(u.category||'—')}</div>
+      ${u.tgUsername ? `<div style="color:#7cc5f5;font-size:12px;margin-top:4px">@${esc(u.tgUsername)}</div>` : ''}
+    </div>
+    <div class="sec">Ish turlari</div>
+    <div>${(u.workTypes||[]).map(w=>`<span class="tag tag-blue">${esc(w)}</span>`).join('') || '<span style="color:var(--muted);font-size:13px">Belgilanmagan</span>'}</div>
+    ${u.phone ? `<div class="sec">Telefon</div><div style="font-size:14px">${esc(u.phone)}</div>` : ''}
+    <div class="sec">Reyting</div>
+    <div style="font-size:18px;font-weight:700;color:var(--yellow)">★ ${u.rating||0}</div>
+  `;
+}
+
+// ─── POST JOB ───
+async function postJob() {
+  const title = $('pj-t').value.trim();
+  const loc   = $('pj-loc').value.trim();
+  if (!title) return toast('Sarlavha kerak');
+  if (!loc)   return toast('Joylashuv kerak');
+
+  const r = await req('/api/jobs','POST',{
+    title, category: S.pjCat, workType: S.pjWt,
+    salary:    parseInt($('pj-sal').value)||0,
+    salaryUnit: $('pj-unit').value,
+    location:  loc,
+    description: $('pj-desc').value.trim(),
+    urgent:    $('pj-urg').checked,
+  });
+  if (!r) return;
+  toast("✅ E'lon joylandi!");
+  closeMo('mo-post');
+  ['pj-t','pj-sal','pj-loc','pj-desc'].forEach(id => $(id).value='');
+  $('pj-urg').checked = false;
+  S.pjCat=''; S.pjWt='';
+  document.querySelectorAll('#pj-cats .chip, #pj-wts .chip').forEach(c=>c.classList.remove('on'));
+  S.jobs.unshift(r.job);
+  renderJobs();
+}
+
+async function deleteJob(id) {
+  const r = await req(`/api/jobs/${id}`, 'DELETE');
+  if (!r) return;
+  toast("E'lon yopildi");
+  renderMyEmployer();
+  S.jobs = S.jobs.filter(j => j.id!==id);
+  renderJobs();
+}
+
+// ─── NOTIFICATIONS ───
+async function loadNotifs() {
+  const data = await req('/api/notifications');
+  if (!data) return;
+  const unread = data.filter(n => n.unread).length;
+  $('notif-dot').classList.toggle('show', unread > 0);
+
+  $('notif-list').innerHTML = data.length ? data.map(n => `
+    <div class="card ${n.unread?'':''}">
+      <div class="c-title" style="font-size:14px">${esc(n.title)}</div>
+      <div class="c-sub" style="margin-top:3px">${esc(n.body)}</div>
+      ${n.unread ? '<span class="tag tag-blue" style="margin-top:6px">Yangi</span>' : ''}
+    </div>
+  `).join('') : `<div class="empty"><div class="empty-ic">🔔</div>Bildirishnoma yo'q</div>`;
+}
+
+async function markNotifsRead() {
+  await req('/api/notifications','POST');
+  $('notif-dot').classList.remove('show');
+}
+
+// ─── PROFILE ───
+function renderProfile() {
+  const u = S.user;
+  $('profile-body').innerHTML = `
+    <div class="card" style="text-align:center;padding:22px 14px;margin-bottom:10px">
+      <div class="av av-lg" style="margin:0 auto 12px">${u.name?.[0]||'?'}</div>
+      <div style="font-size:18px;font-weight:700">${esc(u.name)}</div>
+      <div style="color:var(--muted);font-size:13px;margin-top:3px">${u.type==='worker'?'👷 Ishchi':'🏗️ Ish beruvchi'}</div>
+      ${u.tgUsername ? `<div style="color:#7cc5f5;font-size:12px;margin-top:4px">@${esc(u.tgUsername)}</div>` : ''}
+    </div>
+    ${u.type==='worker' ? `
+      <div class="card">
+        ${u.category ? `<div style="font-size:14px;margin-bottom:8px">🔧 ${esc(u.category)}</div>` : ''}
+        ${u.phone    ? `<div style="font-size:14px;margin-bottom:8px">📞 ${esc(u.phone)}</div>`    : ''}
+        <div>${(u.workTypes||[]).map(w=>`<span class="tag tag-blue">${esc(w)}</span>`).join('')}</div>
+        <div style="margin-top:10px;font-size:16px;font-weight:700;color:var(--yellow)">★ ${u.rating||0}</div>
+      </div>
+    ` : ''}
+    <div style="margin-top:8px">
+      <button class="btn btn-ghost" onclick="logout()">🚪 Chiqish</button>
+    </div>
+  `;
+}
+
+function logout() {
+  localStorage.clear(); location.reload();
+}
+
+// ─── HELPERS ───
+function goStep(id) {
+  document.querySelectorAll('.step').forEach(s=>s.classList.remove('on'));
+  $(id).classList.add('on');
+}
+
+function buildChips(containerId, items, onSelect, single) {
+  const c = $(containerId);
+  if (!c) return;
+  c.innerHTML = items.map(v => `
+    <div class="chip" onclick="chipClick(this,'${containerId}',${single},()=>onSelect_${containerId}('${v}'))">${esc(v)}</div>
+  `).join('');
+  // Store callback
+  window['onSelect_'+containerId] = onSelect;
+}
+
+function chipClick(el, cid, single, cb) {
+  if (single) {
+    document.querySelectorAll(`#${cid} .chip`).forEach(c=>c.classList.remove('on'));
+    el.classList.add('on');
+  } else {
+    el.classList.toggle('on');
+  }
+  cb();
+}
+
+function toggleArr(arr, val) {
+  return arr.includes(val) ? arr.filter(x=>x!==val) : [...arr, val];
+}
+
+function openMo(id)  { $(id).classList.add('on');  }
+function closeMo(id) { $(id).classList.remove('on'); }
+
+async function req(url, method='GET', body) {
+  try {
+    const opts = { method, headers:{'Content-Type':'application/json'} };
+    if (S.token) opts.headers['Authorization'] = 'Bearer '+S.token;
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(url, opts);
+    const d = await r.json();
+    if (r.status===401) { logout(); return null; }
+    if (!r.ok) { toast(d.error||'Xato'); return null; }
+    return d;
+  } catch { toast('Tarmoq xatosi'); return null; }
+}
+
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('on');
+  setTimeout(()=>t.classList.remove('on'), 2600);
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function fmt(n) {
+  return Number(n||0).toLocaleString('uz-UZ');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "kunlikish",
+  "version": "1.0.0",
+  "description": "Kunlik ishchilar platformasi — Telegram Mini App",
+  "private": true,
+  "dependencies": {
+    "@neondatabase/serverless": "^0.9.3"
+  },
+  "engines": { "node": ">=18" }
+}
